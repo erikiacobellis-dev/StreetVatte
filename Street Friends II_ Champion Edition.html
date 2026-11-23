@@ -1,0 +1,2261 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>STREET FRIENDS II: Champion Edition</title>
+  <style>
+    /* Reset e layout arcade responsivo anni '90 */
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      touch-action: manipulation;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #060812;
+      color: #ffffff;
+      font-family: "Courier New", Courier, monospace;
+      font-weight: 900;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #arcade-cabinet {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      max-width: 1200px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px;
+      background: radial-gradient(circle at center, #1d2340 0%, #05070e 100%);
+    }
+
+    #top-bar {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 8px;
+      z-index: 20;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .brand-title {
+      font-size: 13px;
+      letter-spacing: 1px;
+      color: #ffd541;
+      text-shadow: 2px 2px 0 #a30000;
+    }
+
+    .arcade-pill {
+      background: linear-gradient(180deg, #2d355c 0%, #161b33 100%);
+      border: 2px solid #ffd541;
+      color: #ffd541;
+      font-family: "Courier New", Courier, monospace;
+      font-weight: 900;
+      font-size: 11px;
+      padding: 5px 9px;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 3px 0 #7a4e00;
+      transition: transform 0.06s;
+    }
+
+    .arcade-pill:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #7a4e00;
+    }
+
+    .arcade-pill.off {
+      border-color: #5e6480;
+      color: #8b92b2;
+      box-shadow: 0 3px 0 #262938;
+    }
+
+    #screen-frame {
+      position: relative;
+      width: 100%;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 4px solid #37406b;
+      border-radius: 12px;
+      background: #000000;
+      box-shadow: 0 0 36px rgba(0, 0, 0, 0.95), inset 0 0 24px rgba(0, 0, 0, 0.9);
+      overflow: hidden;
+    }
+
+    canvas#gameCanvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      cursor: pointer;
+    }
+
+    #crt-overlay {
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.24) 50%),
+        linear-gradient(90deg, rgba(255, 0, 0, 0.04), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.04));
+      background-size: 100% 4px, 6px 100%;
+      z-index: 10;
+      opacity: 0.72;
+    }
+
+    #crt-overlay.hidden {
+      display: none;
+    }
+
+    #controls-area {
+      width: 100%;
+      padding: 6px 4px 2px 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      z-index: 20;
+    }
+
+    #desktop-legend {
+      text-align: center;
+      font-size: 11px;
+      color: #d0d8ff;
+      line-height: 1.45;
+      background: rgba(16, 20, 38, 0.92);
+      border: 2px solid #323a66;
+      border-radius: 8px;
+      padding: 5px 10px;
+    }
+
+    #desktop-legend .hl {
+      color: #ffd541;
+    }
+
+    #desktop-legend .sp {
+      color: #ff5e6c;
+    }
+
+    #touch-controls {
+      display: none;
+      width: 100%;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 10px;
+      gap: 10px;
+    }
+
+    @media (pointer: coarse), (max-width: 860px) {
+      #touch-controls {
+        display: flex;
+      }
+      #desktop-legend {
+        display: none;
+      }
+    }
+
+    .dpad-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 46px);
+      grid-template-rows: repeat(3, 40px);
+      gap: 4px;
+    }
+
+    .pad-btn {
+      background: linear-gradient(180deg, #424a75 0%, #242945 100%);
+      border: 2px solid #828ec9;
+      border-radius: 8px;
+      color: #ffffff;
+      font-family: "Courier New", Courier, monospace;
+      font-weight: 900;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 0 #121526;
+      cursor: pointer;
+    }
+
+    .pad-btn:active, .pad-btn.pressed {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 #121526;
+      background: #616da8;
+    }
+
+    .action-cluster {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .arc-btn {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      font-family: "Courier New", Courier, monospace;
+      font-weight: 900;
+      font-size: 10px;
+      color: #ffffff;
+      border: 3px solid rgba(255, 255, 255, 0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      cursor: pointer;
+      text-shadow: 1px 1px 0 #000000;
+    }
+
+    .arc-btn:active, .arc-btn.pressed {
+      transform: translateY(4px) scale(0.96);
+    }
+
+    .btn-punch {
+      background: radial-gradient(circle at 30% 30%, #4da6ff, #0055b3);
+      box-shadow: 0 5px 0 #002b59;
+    }
+
+    .btn-kick {
+      background: radial-gradient(circle at 30% 30%, #ffd24d, #cc8400);
+      box-shadow: 0 5px 0 #664200;
+    }
+
+    .btn-special {
+      width: 68px;
+      height: 68px;
+      font-size: 10px;
+      background: radial-gradient(circle at 30% 30%, #ff5e6c, #b3001b);
+      box-shadow: 0 5px 0 #59000d;
+      border-color: #ffe066;
+    }
+  </style>
+</head>
+<body>
+  <div id="arcade-cabinet">
+    <div id="top-bar">
+      <div class="brand-title">STREET FRIENDS II • CHAMPION EDITION</div>
+      <div style="display:flex; gap:6px; flex-wrap:wrap;">
+        <button id="btn-select" class="arcade-pill" title="Torna alla selezione lottatori">SELECT</button>
+        <button id="btn-crt" class="arcade-pill" title="Linee scanline CRT">CRT: ON</button>
+        <button id="btn-sound" class="arcade-pill" title="Audio chiptune">AUDIO: ON</button>
+        <button id="btn-pad" class="arcade-pill" title="Mostra/Nascondi pad touch">PAD</button>
+      </div>
+    </div>
+
+    <div id="screen-frame">
+      <canvas id="gameCanvas" width="640" height="360"></canvas>
+      <div id="crt-overlay"></div>
+    </div>
+
+    <div id="controls-area">
+      <div id="desktop-legend">
+        <span class="hl">P1:</span> [W A S D] Muovi/Salta/Para &nbsp;|&nbsp;
+        <span class="hl">[F]</span> Pugno &nbsp;
+        <span class="hl">[G]</span> Calcio &nbsp;
+        <span class="sp">[H] MOSSA SEGRETA</span>
+        <br />
+        <span class="hl">P2 (2P):</span> [Frecce] Muovi/Salta/Para &nbsp;|&nbsp;
+        <span class="hl">[K / Numpad1]</span> Pugno &nbsp;
+        <span class="hl">[L / Numpad2]</span> Calcio &nbsp;
+        <span class="sp">[O / Numpad3] MOSSA SEGRETA</span>
+      </div>
+
+      <div id="touch-controls">
+        <div class="dpad-grid">
+          <div></div>
+          <button class="pad-btn" data-key="up">▲</button>
+          <div></div>
+          <button class="pad-btn" data-key="left">◀</button>
+          <button class="pad-btn" data-key="down">▼</button>
+          <button class="pad-btn" data-key="right">▶</button>
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+
+        <div class="action-cluster">
+          <button class="arc-btn btn-punch" data-key="punch">PUGNO</button>
+          <button class="arc-btn btn-kick" data-key="kick">CALCIO</button>
+          <button class="arc-btn btn-special" data-key="special">SPECIALE</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      // =========================================================================
+      // 1. CONFIGURAZIONE CANVAS E DATI LOTTATORI (CPS-1 STREET FRIENDS II)
+      // =========================================================================
+      const canvas = document.getElementById("gameCanvas");
+      const ctx = canvas.getContext("2d", { alpha: false });
+      const W = 640;
+      const H = 360;
+      const GROUND_Y = 314;
+
+      const ROSTER_IDS = ["PIGNA", "LEGO", "VATTE", "TAGLIA", "KIANU"];
+
+      const FIGHTERS = {
+        PIGNA: {
+          id: "PIGNA",
+          name: "PIGNA",
+          role: "OCCHIO LUNGO",
+          specialName: "BULBO VOLANTE!",
+          specialShout: "BULBO VOLANTE!!",
+          specialDesc: "Spara il suo occhio gigante rotante!",
+          quote: "\"L'avevo visto arrivare con l'occhio lungo!\"",
+          accent: "#ffd541",
+          bgTop: "#193d29",
+          bgBot: "#0b1c13",
+          speed: 3.35,
+          jump: -12.7,
+          punchDmg: 8,
+          kickDmg: 12,
+          specialDmg: 24,
+          bodyType: "normal",
+          stats: { forza: 84, velocita: 78, follia: 98 }
+        },
+        LEGO: {
+          id: "LEGO",
+          name: "LEGO",
+          role: "MANI A C",
+          specialName: "MANO-RAZZO LEGO!",
+          specialShout: "MANO-RAZZO LEGO!!",
+          specialDesc: "Spara entrambe le mani gialle a razzo!",
+          quote: "\"Non so usare le mani... ma volano che è una meraviglia!\"",
+          accent: "#4ce8ff",
+          bgTop: "#173452",
+          bgBot: "#0a1726",
+          speed: 3.55,
+          jump: -13.0,
+          punchDmg: 8,
+          kickDmg: 11,
+          specialDmg: 24,
+          bodyType: "normal",
+          stats: { forza: 80, velocita: 88, follia: 95 }
+        },
+        VATTE: {
+          id: "VATTE",
+          name: "VATTE",
+          role: "SUMO STILE HONDA",
+          specialName: "OPOSSUM!",
+          specialShout: "OPOSSUM!!",
+          specialDesc: "Si butta a terra fingendosi morto e parte a razzo!",
+          quote: "\"Sembravo morto eh?! E invece... OPOSSUM!\"",
+          accent: "#ff70a6",
+          bgTop: "#4d1a37",
+          bgBot: "#210917",
+          speed: 2.8,
+          jump: -11.7,
+          punchDmg: 10,
+          kickDmg: 14,
+          specialDmg: 27,
+          bodyType: "sumo",
+          stats: { forza: 98, velocita: 66, follia: 100 }
+        },
+        TAGLIA: {
+          id: "TAGLIA",
+          name: "TAGLIA",
+          role: "ONDA RUGBY",
+          specialName: "PEZZO DI MERDA!!",
+          specialShout: "PEZZO DI MERDA!!",
+          specialDesc: "Lancia una grande onda energetica Hadouken!",
+          quote: "\"Una meta in faccia... PEZZO DI MERDA!!\"",
+          accent: "#59c3ff",
+          bgTop: "#182d59",
+          bgBot: "#0a1329",
+          speed: 3.25,
+          jump: -12.5,
+          punchDmg: 9,
+          kickDmg: 13,
+          specialDmg: 26,
+          bodyType: "muscular",
+          stats: { forza: 92, velocita: 80, follia: 94 }
+        },
+        KIANU: {
+          id: "KIANU",
+          name: "KIANU",
+          role: "PUFFO ELETTRICO",
+          specialName: "PUFFO ELETTRICO!",
+          specialShout: "PUFFO ELETTRICO!!",
+          specialDesc: "Diventa Puffo blu elettrico e spara un fulmine!",
+          quote: "\"Alta tensione con lo scaldacollo verde!\"",
+          accent: "#7dff59",
+          bgTop: "#224017",
+          bgBot: "#0e1d09",
+          speed: 3.45,
+          jump: -12.9,
+          punchDmg: 8,
+          kickDmg: 12,
+          specialDmg: 25,
+          bodyType: "normal",
+          stats: { forza: 82, velocita: 86, follia: 99 }
+        }
+      };
+
+      // =========================================================================
+      // 2. MOTORE AUDIO CPS-1 CHIPTUNE CON PROTEZIONE ERRORI
+      // =========================================================================
+      const SoundEngine = {
+        ctx: null,
+        enabled: true,
+        bgmTimer: null,
+        step: 0,
+
+        init() {
+          if (!this.enabled) return;
+          try {
+            if (!this.ctx) {
+              const AudioCtx = window.AudioContext || window.webkitAudioContext;
+              if (AudioCtx) {
+                this.ctx = new AudioCtx();
+              }
+            }
+            if (this.ctx && this.ctx.state === "suspended") {
+              this.ctx.resume().catch(() => {});
+            }
+          } catch (err) {
+            this.ctx = null;
+          }
+        },
+
+        tone(freq, type, duration, gainVal, delay = 0, slideTo = null) {
+          if (!this.enabled) return;
+          try {
+            this.init();
+            if (!this.ctx) return;
+            const now = this.ctx.currentTime + delay;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, now);
+            if (slideTo) {
+              osc.frequency.exponentialRampToValueAtTime(Math.max(20, slideTo), now + duration);
+            }
+            gain.gain.setValueAtTime(gainVal, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + duration + 0.01);
+          } catch (err) {}
+        },
+
+        playSelect() {
+          this.tone(523.25, "square", 0.07, 0.08, 0);
+          this.tone(783.99, "square", 0.09, 0.08, 0.05);
+        },
+
+        playConfirm() {
+          this.tone(440, "square", 0.07, 0.1, 0);
+          this.tone(554.37, "square", 0.07, 0.1, 0.06);
+          this.tone(659.25, "square", 0.08, 0.1, 0.12);
+          this.tone(880, "square", 0.18, 0.11, 0.18);
+        },
+
+        playPunch() {
+          this.tone(190, "sawtooth", 0.09, 0.12, 0, 65);
+        },
+
+        playKick() {
+          this.tone(240, "square", 0.11, 0.12, 0, 55);
+        },
+
+        playHit(heavy = false) {
+          this.tone(heavy ? 110 : 150, "sawtooth", heavy ? 0.22 : 0.12, 0.18, 0, 32);
+          this.tone(heavy ? 75 : 95, "square", heavy ? 0.24 : 0.12, 0.16, 0.02, 28);
+        },
+
+        playBlock() {
+          this.tone(620, "triangle", 0.07, 0.11, 0, 420);
+        },
+
+        playSpecial(id) {
+          if (id === "PIGNA") {
+            this.tone(330, "square", 0.12, 0.12, 0, 880);
+            this.tone(660, "sawtooth", 0.25, 0.11, 0.1, 220);
+          } else if (id === "LEGO") {
+            this.tone(220, "sawtooth", 0.28, 0.13, 0, 920);
+            this.tone(440, "square", 0.22, 0.1, 0.06, 1100);
+          } else if (id === "VATTE") {
+            this.tone(140, "triangle", 0.18, 0.14, 0, 70);
+            this.tone(180, "sawtooth", 0.35, 0.15, 0.22, 540);
+          } else if (id === "TAGLIA") {
+            this.tone(260, "sawtooth", 0.32, 0.14, 0, 780);
+            this.tone(520, "square", 0.28, 0.12, 0.08, 1040);
+          } else if (id === "KIANU") {
+            for (let i = 0; i < 6; i++) {
+              this.tone(420 + (i % 2) * 480, "square", 0.05, 0.11, i * 0.045, 980);
+            }
+          }
+        },
+
+        playKO() {
+          const notes = [440, 392, 349.23, 329.63, 261.63, 196];
+          notes.forEach((n, i) => {
+            this.tone(n, "sawtooth", 0.16, 0.14, i * 0.11, n * 0.8);
+          });
+        },
+
+        startBgm() {
+          if (this.bgmTimer) return;
+          const bassLine = [
+            110, 110, 146.83, 110, 164.81, 146.83, 130.81, 98,
+            110, 110, 146.83, 164.81, 196, 164.81, 146.83, 130.81
+          ];
+          this.bgmTimer = setInterval(() => {
+            try {
+              if (!this.enabled || !this.ctx || this.ctx.state !== "running") return;
+              if (gameState.screen !== "FIGHT") return;
+              const note = bassLine[this.step % bassLine.length];
+              this.tone(note, "triangle", 0.13, 0.045, 0);
+              if (this.step % 4 === 0) {
+                this.tone(note * 2, "square", 0.07, 0.025, 0);
+              }
+              this.step++;
+            } catch (err) {}
+          }, 165);
+        }
+      };
+
+      // =========================================================================
+      // 3. STATO DI GIOCO E INPUT TASTIERA / TOUCH
+      // =========================================================================
+      const gameState = {
+        screen: "SELECT", // SELECT | VS | FIGHT | KO
+        mode: "1P",       // 1P | 2P
+        selectTurn: 1,
+        p1Id: "PIGNA",
+        p2Id: "VATTE",
+        vsTimer: 0,
+        roundTimer: 99,
+        timerTick: 0,
+        announceText: "",
+        announceTimer: 0,
+        hitstop: 0,
+        shake: 0,
+        winner: null,
+        frameCount: 0,
+        uiHitboxes: []
+      };
+
+      const keys = {};
+      const touchState = {
+        left: false,
+        right: false,
+        up: false,
+        down: false,
+        punch: false,
+        kick: false,
+        special: false
+      };
+
+      window.addEventListener("keydown", (e) => {
+        try {
+          SoundEngine.init();
+          SoundEngine.startBgm();
+          const code = e.code;
+          keys[code] = true;
+
+          if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(code)) {
+            e.preventDefault();
+          }
+
+          if (gameState.screen === "SELECT") {
+            handleSelectKeyboard(code);
+          } else if (gameState.screen === "KO") {
+            if (code === "Enter" || code === "Space") {
+              startVsScreen();
+            } else if (code === "Escape") {
+              goToSelectScreen();
+            }
+          }
+        } catch (err) {}
+      });
+
+      window.addEventListener("keyup", (e) => {
+        keys[e.code] = false;
+      });
+
+      function handleSelectKeyboard(code) {
+        const currentId = (gameState.mode === "2P" && gameState.selectTurn === 2)
+          ? gameState.p2Id
+          : gameState.p1Id;
+        let idx = ROSTER_IDS.indexOf(currentId);
+
+        if (code === "ArrowRight" || code === "KeyD") {
+          idx = (idx + 1) % ROSTER_IDS.length;
+          selectFighterByIndex(idx);
+        } else if (code === "ArrowLeft" || code === "KeyA") {
+          idx = (idx - 1 + ROSTER_IDS.length) % ROSTER_IDS.length;
+          selectFighterByIndex(idx);
+        } else if (code === "Tab" || code === "KeyM") {
+          toggleMode();
+        } else if (code === "Enter" || code === "Space" || code === "KeyF") {
+          confirmSelectionAction();
+        }
+      }
+
+      function selectFighterByIndex(idx) {
+        const chosenId = ROSTER_IDS[idx];
+        SoundEngine.playSelect();
+        if (gameState.mode === "2P" && gameState.selectTurn === 2) {
+          gameState.p2Id = chosenId;
+        } else {
+          gameState.p1Id = chosenId;
+          if (gameState.mode === "1P" && gameState.p2Id === chosenId) {
+            const others = ROSTER_IDS.filter((id) => id !== chosenId);
+            gameState.p2Id = others[0];
+          }
+        }
+      }
+
+      function toggleMode() {
+        SoundEngine.playSelect();
+        gameState.mode = gameState.mode === "1P" ? "2P" : "1P";
+        gameState.selectTurn = 1;
+        if (gameState.mode === "1P" && gameState.p1Id === gameState.p2Id) {
+          gameState.p2Id = ROSTER_IDS.find((id) => id !== gameState.p1Id);
+        }
+      }
+
+      function confirmSelectionAction() {
+        SoundEngine.playConfirm();
+        if (gameState.mode === "2P" && gameState.selectTurn === 1) {
+          gameState.selectTurn = 2;
+          return;
+        }
+        startVsScreen();
+      }
+
+      function goToSelectScreen() {
+        SoundEngine.playSelect();
+        gameState.screen = "SELECT";
+        gameState.selectTurn = 1;
+        gameState.winner = null;
+      }
+
+      function getCanvasCoords(clientX, clientY) {
+        const rect = canvas.getBoundingClientRect();
+        if (!rect.width || !rect.height) return { x: 0, y: 0 };
+        return {
+          x: ((clientX - rect.left) / rect.width) * W,
+          y: ((clientY - rect.top) / rect.height) * H
+        };
+      }
+
+      function handleCanvasPointer(clientX, clientY) {
+        SoundEngine.init();
+        SoundEngine.startBgm();
+        const pt = getCanvasCoords(clientX, clientY);
+
+        for (let i = gameState.uiHitboxes.length - 1; i >= 0; i--) {
+          const hb = gameState.uiHitboxes[i];
+          if (pt.x >= hb.x && pt.x <= hb.x + hb.w && pt.y >= hb.y && pt.y <= hb.y + hb.h) {
+            hb.onClick();
+            return;
+          }
+        }
+      }
+
+      canvas.addEventListener("mousedown", (e) => {
+        handleCanvasPointer(e.clientX, e.clientY);
+      });
+
+      canvas.addEventListener("touchstart", (e) => {
+        if (e.touches && e.touches.length > 0) {
+          e.preventDefault();
+          handleCanvasPointer(e.touches[0].clientX, e.touches[0].clientY);
+        }
+      }, { passive: false });
+
+      document.getElementById("btn-select").addEventListener("click", () => {
+        goToSelectScreen();
+      });
+
+      const btnCrt = document.getElementById("btn-crt");
+      const crtOverlay = document.getElementById("crt-overlay");
+      btnCrt.addEventListener("click", () => {
+        crtOverlay.classList.toggle("hidden");
+        const on = !crtOverlay.classList.contains("hidden");
+        btnCrt.textContent = on ? "CRT: ON" : "CRT: OFF";
+        btnCrt.classList.toggle("off", !on);
+      });
+
+      const btnSound = document.getElementById("btn-sound");
+      btnSound.addEventListener("click", () => {
+        SoundEngine.enabled = !SoundEngine.enabled;
+        if (SoundEngine.enabled) {
+          SoundEngine.init();
+          SoundEngine.startBgm();
+        }
+        btnSound.textContent = SoundEngine.enabled ? "AUDIO: ON" : "AUDIO: OFF";
+        btnSound.classList.toggle("off", !SoundEngine.enabled);
+      });
+
+      const btnPad = document.getElementById("btn-pad");
+      const touchControlsEl = document.getElementById("touch-controls");
+      btnPad.addEventListener("click", () => {
+        const isShown = getComputedStyle(touchControlsEl).display !== "none";
+        touchControlsEl.style.display = isShown ? "none" : "flex";
+      });
+
+      document.querySelectorAll("[data-key]").forEach((btn) => {
+        const k = btn.getAttribute("data-key");
+        const press = (e) => {
+          e.preventDefault();
+          SoundEngine.init();
+          SoundEngine.startBgm();
+          touchState[k] = true;
+          btn.classList.add("pressed");
+        };
+        const release = (e) => {
+          e.preventDefault();
+          touchState[k] = false;
+          btn.classList.remove("pressed");
+        };
+        btn.addEventListener("touchstart", press, { passive: false });
+        btn.addEventListener("touchend", release, { passive: false });
+        btn.addEventListener("touchcancel", release, { passive: false });
+        btn.addEventListener("mousedown", press);
+        btn.addEventListener("mouseup", release);
+        btn.addEventListener("mouseleave", release);
+      });
+
+      // =========================================================================
+      // 4. RENDERING PIXEL-ART 16-BIT DEI RITRATTI
+      // =========================================================================
+      function pxRect(x, y, w, h, color) {
+        ctx.fillStyle = color;
+        ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
+      }
+
+      function drawPortrait(id, x, y, size, flip = false) {
+        const f = FIGHTERS[id];
+        ctx.save();
+        ctx.translate(Math.round(x), Math.round(y));
+
+        const grad = ctx.createLinearGradient(0, 0, 0, size);
+        grad.addColorStop(0, f.bgTop);
+        grad.addColorStop(1, f.bgBot);
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, size, size);
+
+        // Scanline interne da ritratto CPS-1
+        ctx.fillStyle = "rgba(255,255,255,0.06)";
+        for (let gy = 4; gy < size; gy += 8) {
+          ctx.fillRect(0, gy, size, 1);
+        }
+
+        const s = size / 64;
+        ctx.scale(s, s);
+        if (flip) {
+          ctx.translate(64, 0);
+          ctx.scale(-1, 1);
+        }
+
+        if (id === "PIGNA") {
+          // Chiodo nero borchiato + polo grigia
+          pxRect(7, 44, 50, 20, "#14161f");
+          pxRect(11, 44, 13, 15, "#2d3345");
+          pxRect(40, 44, 13, 15, "#2d3345");
+          pxRect(15, 47, 2, 2, "#e5e9f0");
+          pxRect(47, 47, 2, 2, "#e5e9f0");
+          pxRect(22, 46, 20, 18, "#828a99");
+          pxRect(26, 44, 12, 6, "#101114");
+
+          // Viso
+          pxRect(20, 20, 24, 25, "#e8a87c");
+          pxRect(18, 25, 3, 8, "#d48d63");
+          pxRect(43, 25, 3, 8, "#d48d63");
+
+          // Berretto verde scuro a coste
+          pxRect(17, 7, 30, 15, "#1f5934");
+          pxRect(15, 16, 34, 7, "#154024");
+          for (let rx = 18; rx <= 44; rx += 4) {
+            pxRect(rx, 16, 2, 7, "#2c7848");
+          }
+
+          // Sopracciglia e un occhio visibilmente più grosso
+          pxRect(21, 23, 9, 2, "#241914");
+          pxRect(35, 24, 7, 2, "#241914");
+
+          pxRect(21, 25, 10, 9, "#ffffff");
+          pxRect(20, 26, 12, 7, "#ffffff");
+          pxRect(24, 27, 4, 5, "#3b2214");
+          pxRect(25, 28, 2, 2, "#000000");
+          pxRect(24, 27, 1, 1, "#ffffff");
+
+          pxRect(35, 27, 6, 4, "#ffffff");
+          pxRect(37, 28, 3, 3, "#3b2214");
+
+          // Naso, baffoni e pizzetto sale e pepe
+          pxRect(30, 28, 4, 6, "#d48d63");
+          pxRect(21, 35, 22, 4, "#262220");
+          pxRect(24, 36, 3, 2, "#9c9c9c");
+          pxRect(37, 36, 3, 2, "#9c9c9c");
+          pxRect(26, 39, 12, 2, "#ffffff");
+          pxRect(25, 41, 14, 4, "#332f2d");
+          pxRect(28, 42, 8, 2, "#a6a6a6");
+        } else if (id === "LEGO") {
+          // Giacca nera + gilet giallo alta visibilità con banda riflettente
+          pxRect(8, 43, 48, 21, "#161821");
+          pxRect(14, 43, 36, 21, "#d9ff1a");
+          pxRect(27, 43, 10, 21, "#161821");
+          pxRect(14, 55, 13, 4, "#c8d4dc");
+          pxRect(37, 55, 13, 4, "#c8d4dc");
+
+          // Viso e capelli castani
+          pxRect(26, 39, 12, 6, "#d9966c");
+          pxRect(20, 17, 24, 24, "#f0b289");
+          pxRect(18, 24, 3, 7, "#d9966c");
+          pxRect(43, 24, 3, 7, "#d9966c");
+          pxRect(20, 12, 24, 7, "#593722");
+          pxRect(23, 10, 18, 3, "#75492e");
+
+          pxRect(23, 24, 6, 3, "#ffffff");
+          pxRect(25, 24, 3, 3, "#2b1a10");
+          pxRect(35, 24, 6, 3, "#ffffff");
+          pxRect(37, 24, 3, 3, "#2b1a10");
+          pxRect(30, 26, 4, 6, "#d9966c");
+
+          pxRect(21, 32, 22, 9, "#786e68");
+          pxRect(25, 34, 14, 2, "#ffffff");
+
+          // Mani gialle a C da minifigure LEGO
+          pxRect(7, 36, 11, 11, "#ffcf00");
+          pxRect(11, 39, 7, 5, f.bgBot);
+          pxRect(46, 33, 11, 11, "#ffcf00");
+          pxRect(46, 36, 7, 5, f.bgBot);
+        } else if (id === "VATTE") {
+          // Stile E. Honda: fisico imponente con petto villoso e fascia mawashi
+          pxRect(5, 42, 54, 22, "#e09c72");
+          pxRect(15, 45, 34, 16, "#8c6954");
+          pxRect(21, 47, 22, 12, "#594235");
+
+          // Testa rasata con pochi capelli radi
+          pxRect(20, 12, 24, 31, "#e8a87c");
+          pxRect(24, 9, 16, 4, "#4a433f");
+          pxRect(27, 8, 10, 2, "#6e6560");
+
+          // Occhiali tartarugati cat-eye
+          pxRect(17, 20, 14, 8, "#5c3324");
+          pxRect(33, 20, 14, 8, "#5c3324");
+          pxRect(30, 22, 4, 2, "#3d2016");
+          pxRect(19, 22, 10, 5, "#192230");
+          pxRect(35, 22, 10, 5, "#192230");
+          pxRect(20, 22, 3, 2, "#4a8c7a");
+          pxRect(36, 22, 3, 2, "#4a8c7a");
+
+          // Barba sale e pepe folta
+          pxRect(20, 31, 24, 12, "#383432");
+          pxRect(23, 33, 18, 9, "#8c8784");
+          pxRect(28, 37, 8, 2, "#cf9374");
+
+          // Mano alzata con unghie rosa
+          pxRect(7, 31, 9, 13, "#e8a87c");
+          pxRect(6, 25, 3, 6, "#d95b8c");
+          pxRect(10, 24, 3, 7, "#e86da0");
+          pxRect(14, 26, 3, 6, "#d95b8c");
+        } else if (id === "TAGLIA") {
+          // Rugbista muscoloso con capelli corti e ciuffo
+          pxRect(7, 43, 50, 21, "#e6a47a");
+          pxRect(18, 46, 28, 15, "#9c7860");
+          pxRect(25, 38, 14, 7, "#d48d63");
+
+          pxRect(20, 14, 24, 26, "#ebb088");
+          pxRect(21, 9, 22, 7, "#593b27");
+          pxRect(25, 7, 15, 4, "#785137");
+
+          pxRect(22, 22, 7, 2, "#422b1d");
+          pxRect(35, 22, 7, 2, "#422b1d");
+          pxRect(23, 24, 5, 3, "#ffffff");
+          pxRect(25, 24, 2, 3, "#291b12");
+          pxRect(36, 24, 5, 3, "#ffffff");
+          pxRect(38, 24, 2, 3, "#291b12");
+
+          pxRect(30, 25, 4, 6, "#d48d63");
+          pxRect(21, 31, 22, 9, "#6e5a4f");
+          pxRect(26, 33, 12, 2, "#d98a7c");
+        } else if (id === "KIANU") {
+          // Scaldacollo verde lime a cappuccio + maglia rugby gialla
+          pxRect(8, 42, 48, 22, "#f5d419");
+          pxRect(6, 48, 8, 16, "#7a828c");
+          pxRect(50, 48, 8, 16, "#7a828c");
+          pxRect(37, 47, 7, 8, "#1e3b22");
+
+          pxRect(16, 8, 32, 35, "#74d649");
+          pxRect(18, 6, 28, 4, "#8ef062");
+          pxRect(20, 36, 24, 8, "#5bb835");
+
+          pxRect(22, 14, 20, 22, "#e3a178");
+          pxRect(24, 21, 5, 3, "#ffffff");
+          pxRect(26, 21, 2, 3, "#2b1d14");
+          pxRect(35, 21, 5, 3, "#ffffff");
+          pxRect(37, 21, 2, 3, "#2b1d14");
+          pxRect(30, 22, 4, 6, "#cc865e");
+          pxRect(23, 29, 18, 7, "#6b5d54");
+        }
+
+        ctx.restore();
+        ctx.strokeStyle = "#ffd541";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x + 1, y + 1, size - 2, size - 2);
+      }
+
+      // =========================================================================
+      // 5. SFONDO STADIO DA RUGBY ITALIANO AL TRAMONTO
+      // =========================================================================
+      function drawRugbyStadium(cameraX) {
+        const skyBands = [
+          { y: 0, h: 36, c: "#2b1d52" },
+          { y: 36, h: 34, c: "#54296b" },
+          { y: 70, h: 32, c: "#8f3b65" },
+          { y: 102, h: 30, c: "#c95b4b" },
+          { y: 132, h: 34, c: "#f09443" }
+        ];
+        skyBands.forEach((b) => pxRect(0, b.y, W, b.h, b.c));
+
+        // Colline
+        const hillShift = Math.floor(cameraX * 0.15);
+        ctx.fillStyle = "#3b2b54";
+        ctx.beginPath();
+        ctx.moveTo(0, 166);
+        for (let hx = -100; hx <= W + 120; hx += 80) {
+          const peak = 128 + ((Math.abs(hx + hillShift) * 17) % 24);
+          ctx.lineTo(hx - (hillShift % 80), peak);
+        }
+        ctx.lineTo(W, 166);
+        ctx.closePath();
+        ctx.fill();
+
+        // Alberi
+        const bgShift = Math.floor(cameraX * 0.3);
+        for (let tx = -40; tx < W + 80; tx += 36) {
+          const rx = tx - (bgShift % 36);
+          pxRect(rx + 6, 134, 16, 32, "#193829");
+          pxRect(rx + 10, 124, 8, 12, "#224d38");
+        }
+
+        // Torri faro
+        [95, 545].forEach((lx) => {
+          const fx = lx - Math.floor(cameraX * 0.35);
+          pxRect(fx - 3, 52, 6, 118, "#4c546e");
+          pxRect(fx - 18, 36, 36, 18, "#262b3d");
+          for (let r = 0; r < 2; r++) {
+            for (let c = 0; c < 4; c++) {
+              pxRect(fx - 15 + c * 8, 39 + r * 7, 6, 5, "#fff5b8");
+            }
+          }
+        });
+
+        // Club House "RUGBY"
+        const midShift = Math.floor(cameraX * 0.45);
+        const clubX = 390 - midShift;
+        pxRect(clubX, 128, 140, 48, "#9c6644");
+        pxRect(clubX - 6, 116, 152, 14, "#8a3224");
+        pxRect(clubX + 36, 122, 68, 13, "#e6dec8");
+        ctx.fillStyle = "#1f2430";
+        ctx.font = "bold 10px Courier New";
+        ctx.textAlign = "center";
+        ctx.fillText("RUGBY", clubX + 70, 132);
+        pxRect(clubX + 58, 144, 24, 32, "#2b1d16");
+        pxRect(clubX + 16, 144, 26, 16, "#3b5978");
+        pxRect(clubX + 98, 144, 26, 16, "#3b5978");
+
+        // Tribuna tifosi con bandiere tricolore italiane
+        const standX = 185 - midShift;
+        pxRect(standX, 136, 185, 40, "#3b4259");
+        const wave = Math.sin(gameState.frameCount * 0.12) * 2;
+        for (let row = 0; row < 3; row++) {
+          for (let i = 0; i < 14; i++) {
+            const fx = standX + 8 + i * 12;
+            const fy = 140 + row * 10 + ((i + row) % 2) * wave * 0.5;
+            const colors = ["#2e8b57", "#d9383a", "#2b6cb0", "#e6b800"];
+            pxRect(fx, fy, 7, 8, colors[(i + row) % colors.length]);
+            pxRect(fx + 1, fy - 4, 5, 4, "#f0b289");
+            if ((i + row) % 5 === 0) {
+              pxRect(fx + 3, fy - 14 + wave, 3, 7, "#009246");
+              pxRect(fx + 6, fy - 14 + wave, 3, 7, "#ffffff");
+              pxRect(fx + 9, fy - 14 + wave, 3, 7, "#ce2b37");
+            }
+          }
+        }
+
+        // Bordo campo e cartelloni
+        pxRect(0, 174, W, 16, "#2c3545");
+        for (let bx = -40; bx < W + 80; bx += 64) {
+          const rx = bx - (Math.floor(cameraX * 0.6) % 64);
+          pxRect(rx + 2, 176, 58, 12, (Math.abs(bx) / 64) % 2 === 0 ? "#1f5934" : "#b8252a");
+          pxRect(rx + 6, 180, 50, 4, "#ffd541");
+        }
+
+        // Campo in erba con linee bianche di gesso
+        const grassGrad = ctx.createLinearGradient(0, 190, 0, H);
+        grassGrad.addColorStop(0, "#3d7a2b");
+        grassGrad.addColorStop(0.5, "#326922");
+        grassGrad.addColorStop(1, "#255218");
+        ctx.fillStyle = grassGrad;
+        ctx.fillRect(0, 190, W, H - 190);
+
+        const fgShift = Math.floor(cameraX * 0.85);
+        for (let sx = -80; sx < W + 160; sx += 80) {
+          const rx = sx - (fgShift % 160);
+          ctx.fillStyle = "rgba(255,255,255,0.04)";
+          ctx.fillRect(rx, 190, 80, H - 190);
+        }
+
+        ctx.strokeStyle = "rgba(245, 250, 240, 0.82)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(0, 202);
+        ctx.lineTo(W, 202);
+        ctx.moveTo(0, 326);
+        ctx.lineTo(W, 326);
+        [120, 320, 520].forEach((lx) => {
+          const topX = lx - Math.floor(cameraX * 0.65);
+          const botX = lx - Math.floor(cameraX * 0.95);
+          ctx.moveTo(topX, 202);
+          ctx.lineTo(botX, 326);
+        });
+        ctx.stroke();
+
+        // Pali ad H con protezioni blu
+        const postX = 96 - Math.floor(cameraX * 0.72);
+        pxRect(postX, 66, 5, 136, "#f2f5f7");
+        pxRect(postX - 3, 168, 11, 34, "#1a56b8");
+        pxRect(postX + 44, 76, 5, 124, "#f2f5f7");
+        pxRect(postX + 41, 168, 11, 32, "#1a56b8");
+        pxRect(postX, 146, 49, 5, "#f2f5f7");
+
+        // Bandierina d'angolo
+        const flagX = postX + 64;
+        pxRect(flagX, 184, 2, 18, "#ffd541");
+        const fw = Math.sin(gameState.frameCount * 0.18) * 2;
+        pxRect(flagX + 2, 184, 10, 6 + fw * 0.4, "#e63946");
+
+        pxRect(0, 330, W, 30, "#4a321f");
+        pxRect(0, 330, W, 4, "#2c5e1c");
+      }
+
+      // =========================================================================
+      // 6. COMBATTIMENTO, MOSSE SEGRETE, CPU E 2P LOCALE
+      // =========================================================================
+      let fighters = [];
+      let projectiles = [];
+      let particles = [];
+      let shoutBubbles = [];
+
+      function createFighter(id, slot) {
+        const cfg = FIGHTERS[id];
+        return {
+          slot,
+          id,
+          cfg,
+          x: slot === 1 ? 175 : 465,
+          y: GROUND_Y,
+          vx: 0,
+          vy: 0,
+          facing: slot === 1 ? 1 : -1,
+          hp: 100,
+          displayHp: 100,
+          superMeter: 100,
+          state: "IDLE",
+          stateTimer: 0,
+          specialPhase: 0,
+          hasHitThisAttack: false,
+          isMovingBack: false,
+          animTick: 0,
+          aiCooldown: 20
+        };
+      }
+
+      function startVsScreen() {
+        gameState.screen = "VS";
+        gameState.vsTimer = 110;
+        gameState.winner = null;
+      }
+
+      function startFight() {
+        gameState.screen = "FIGHT";
+        gameState.roundTimer = 99;
+        gameState.timerTick = 0;
+        gameState.announceText = "ROUND 1 - FIGHT!";
+        gameState.announceTimer = 85;
+        gameState.hitstop = 0;
+        gameState.shake = 0;
+        projectiles = [];
+        particles = [];
+        shoutBubbles = [];
+        fighters = [
+          createFighter(gameState.p1Id, 1),
+          createFighter(gameState.p2Id, 2)
+        ];
+      }
+
+      function spawnParticles(x, y, color, count = 12, speed = 5) {
+        for (let i = 0; i < count; i++) {
+          const ang = (Math.PI * 2 * i) / count + Math.random() * 0.5;
+          const spd = 1.5 + Math.random() * speed;
+          particles.push({
+            x,
+            y,
+            vx: Math.cos(ang) * spd,
+            vy: Math.sin(ang) * spd - 1.5,
+            life: 16 + Math.floor(Math.random() * 12),
+            size: 3 + Math.floor(Math.random() * 4),
+            color
+          });
+        }
+      }
+
+      function addShoutBubble(fighter, text, color = "#ffd541") {
+        shoutBubbles.push({
+          fighter,
+          text,
+          color,
+          life: 68
+        });
+      }
+
+      function getPlayerControls(slot) {
+        if (slot === 1) {
+          return {
+            left: !!(keys["KeyA"] || touchState.left || (gameState.mode === "1P" && keys["ArrowLeft"])),
+            right: !!(keys["KeyD"] || touchState.right || (gameState.mode === "1P" && keys["ArrowRight"])),
+            up: !!(keys["KeyW"] || touchState.up || (gameState.mode === "1P" && keys["ArrowUp"])),
+            down: !!(keys["KeyS"] || touchState.down || (gameState.mode === "1P" && keys["ArrowDown"])),
+            punch: !!(keys["KeyF"] || touchState.punch),
+            kick: !!(keys["KeyG"] || touchState.kick),
+            special: !!(keys["KeyH"] || touchState.special)
+          };
+        }
+        return {
+          left: !!keys["ArrowLeft"],
+          right: !!keys["ArrowRight"],
+          up: !!keys["ArrowUp"],
+          down: !!keys["ArrowDown"],
+          punch: !!(keys["KeyK"] || keys["Numpad1"]),
+          kick: !!(keys["KeyL"] || keys["Numpad2"]),
+          special: !!(keys["KeyO"] || keys["Numpad3"])
+        };
+      }
+
+      function getCpuControls(cpu, opp) {
+        const ctrl = { left: false, right: false, up: false, down: false, punch: false, kick: false, special: false };
+        if (gameState.announceTimer > 35) return ctrl;
+
+        const dist = Math.abs(cpu.x - opp.x);
+        const dirToOpp = opp.x > cpu.x ? 1 : -1;
+
+        if (cpu.aiCooldown > 0) {
+          cpu.aiCooldown--;
+          if (dist > 140) {
+            if (dirToOpp > 0) ctrl.right = true;
+            else ctrl.left = true;
+          }
+          return ctrl;
+        }
+
+        if ((opp.state === "PUNCH" || opp.state === "KICK") && dist < 110 && Math.random() < 0.45) {
+          if (dirToOpp > 0) ctrl.left = true;
+          else ctrl.right = true;
+          cpu.aiCooldown = 14;
+          return ctrl;
+        }
+
+        if (cpu.superMeter >= 100 && Math.random() < 0.35) {
+          ctrl.special = true;
+          cpu.aiCooldown = 36;
+          return ctrl;
+        }
+
+        if (dist > 95) {
+          if (dirToOpp > 0) ctrl.right = true;
+          else ctrl.left = true;
+          if (Math.random() < 0.03) ctrl.up = true;
+        } else {
+          const r = Math.random();
+          if (r < 0.42) ctrl.punch = true;
+          else if (r < 0.78) ctrl.kick = true;
+          else if (dirToOpp > 0) ctrl.left = true;
+          else ctrl.right = true;
+          cpu.aiCooldown = 18 + Math.floor(Math.random() * 14);
+        }
+        return ctrl;
+      }
+
+      function triggerSpecialMove(f) {
+        f.state = "SPECIAL";
+        f.superMeter = 0;
+        f.hasHitThisAttack = false;
+        f.specialPhase = 0;
+        SoundEngine.playSpecial(f.id);
+        addShoutBubble(f, f.cfg.specialShout, f.cfg.accent);
+        gameState.shake = 6;
+
+        if (f.id === "PIGNA") {
+          f.stateTimer = 28;
+          projectiles.push({
+            owner: f,
+            type: "EYE",
+            x: f.x + f.facing * 26,
+            y: f.y - 68,
+            vx: f.facing * 7.6,
+            r: 15,
+            dmg: f.cfg.specialDmg,
+            spin: 0
+          });
+        } else if (f.id === "LEGO") {
+          f.stateTimer = 28;
+          projectiles.push({
+            owner: f,
+            type: "LEGO_HAND",
+            x: f.x + f.facing * 28,
+            y: f.y - 62,
+            vx: f.facing * 8.4,
+            r: 13,
+            dmg: Math.ceil(f.cfg.specialDmg * 0.55)
+          });
+          projectiles.push({
+            owner: f,
+            type: "LEGO_HAND",
+            x: f.x + f.facing * 12,
+            y: f.y - 42,
+            vx: f.facing * 7.5,
+            r: 13,
+            dmg: Math.ceil(f.cfg.specialDmg * 0.55)
+          });
+        } else if (f.id === "VATTE") {
+          f.stateTimer = 56;
+          f.specialPhase = 1;
+          f.vx = 0;
+          f.vy = 0;
+        } else if (f.id === "TAGLIA") {
+          f.stateTimer = 30;
+          projectiles.push({
+            owner: f,
+            type: "HADOUKEN",
+            x: f.x + f.facing * 34,
+            y: f.y - 54,
+            vx: f.facing * 7.8,
+            r: 22,
+            dmg: f.cfg.specialDmg
+          });
+        } else if (f.id === "KIANU") {
+          f.stateTimer = 34;
+          spawnParticles(f.x, f.y - 50, "#33aaff", 18, 6);
+          projectiles.push({
+            owner: f,
+            type: "SMURF_BOLT",
+            x: f.x + f.facing * 30,
+            y: f.y - 52,
+            vx: f.facing * 9.2,
+            r: 18,
+            dmg: f.cfg.specialDmg
+          });
+        }
+      }
+
+      function applyDamage(attacker, defender, dmg, knockback, isHeavy = false) {
+        const canBlock =
+          defender.y >= GROUND_Y &&
+          ["IDLE", "WALK", "CROUCH", "BLOCK"].includes(defender.state) &&
+          defender.isMovingBack;
+
+        if (canBlock) {
+          defender.state = "BLOCK";
+          defender.stateTimer = 12;
+          defender.hp = Math.max(1, defender.hp - Math.ceil(dmg * 0.2));
+          defender.vx = -defender.facing * (knockback * 0.5);
+          defender.superMeter = Math.min(100, defender.superMeter + 8);
+          SoundEngine.playBlock();
+          spawnParticles(defender.x + defender.facing * 14, defender.y - 52, "#70d6ff", 8, 3);
+          return;
+        }
+
+        defender.hp = Math.max(0, defender.hp - dmg);
+        defender.state = "HIT";
+        defender.stateTimer = isHeavy ? 20 : 13;
+        defender.vx = attacker.facing * knockback;
+        if (isHeavy) {
+          defender.vy = -5.5;
+        }
+
+        attacker.superMeter = Math.min(100, attacker.superMeter + dmg * 1.4);
+        defender.superMeter = Math.min(100, defender.superMeter + dmg * 1.1);
+
+        gameState.hitstop = isHeavy ? 6 : 3;
+        gameState.shake = isHeavy ? 9 : 4;
+        SoundEngine.playHit(isHeavy);
+        spawnParticles(
+          defender.x,
+          defender.y - 54,
+          isHeavy ? "#ffcf40" : "#ffffff",
+          isHeavy ? 18 : 10,
+          isHeavy ? 6 : 4
+        );
+
+        if (defender.hp <= 0) {
+          finishMatch(attacker, defender);
+        }
+      }
+
+      function finishMatch(winner, loser) {
+        loser.state = "KO";
+        loser.vy = -8.5;
+        loser.vx = -loser.facing * 5.5;
+        gameState.screen = "KO";
+        gameState.winner = winner;
+        gameState.announceText = "K.O.!";
+        gameState.announceTimer = 140;
+        gameState.shake = 14;
+        SoundEngine.playKO();
+      }
+
+      function updateFight() {
+        if (!fighters || fighters.length < 2) return;
+
+        if (gameState.hitstop > 0) {
+          gameState.hitstop--;
+          return;
+        }
+        if (gameState.shake > 0) {
+          gameState.shake--;
+        }
+        if (gameState.announceTimer > 0) {
+          gameState.announceTimer--;
+        }
+
+        if (gameState.screen === "FIGHT" && gameState.announceTimer <= 30) {
+          gameState.timerTick++;
+          if (gameState.timerTick >= 60) {
+            gameState.timerTick = 0;
+            if (gameState.roundTimer > 0) {
+              gameState.roundTimer--;
+            } else {
+              const [p1, p2] = fighters;
+              if (p1.hp >= p2.hp) finishMatch(p1, p2);
+              else finishMatch(p2, p1);
+            }
+          }
+        }
+
+        const [p1, p2] = fighters;
+
+        fighters.forEach((f, idx) => {
+          const opp = idx === 0 ? p2 : p1;
+          f.animTick++;
+
+          if (f.displayHp > f.hp) {
+            f.displayHp = Math.max(f.hp, f.displayHp - 0.65);
+          }
+
+          if (gameState.screen === "KO") {
+            f.x += f.vx;
+            f.y += f.vy;
+            if (f.y < GROUND_Y) {
+              f.vy += 0.65;
+            } else {
+              f.y = GROUND_Y;
+              f.vy = 0;
+              f.vx *= 0.82;
+            }
+            f.x = Math.max(46, Math.min(W - 46, f.x));
+            return;
+          }
+
+          if (f.y >= GROUND_Y && ["IDLE", "WALK", "CROUCH"].includes(f.state)) {
+            f.facing = opp.x >= f.x ? 1 : -1;
+          }
+
+          const ctrl = (f.slot === 2 && gameState.mode === "1P")
+            ? getCpuControls(f, opp)
+            : getPlayerControls(f.slot);
+
+          f.isMovingBack = (f.facing === 1 && ctrl.left) || (f.facing === -1 && ctrl.right);
+
+          if (f.stateTimer > 0) {
+            f.stateTimer--;
+
+            if (f.id === "VATTE" && f.state === "SPECIAL") {
+              if (f.stateTimer > 34) {
+                f.specialPhase = 1;
+                f.vx = 0;
+              } else {
+                if (f.specialPhase === 1) {
+                  f.specialPhase = 2;
+                  spawnParticles(f.x, f.y - 22, "#ff70a6", 14, 5);
+                }
+                f.vx = f.facing * 12.2;
+                if (!f.hasHitThisAttack && Math.abs(f.x - opp.x) < 58 && Math.abs(f.y - opp.y) < 55) {
+                  f.hasHitThisAttack = true;
+                  applyDamage(f, opp, f.cfg.specialDmg, 9.5, true);
+                }
+              }
+            }
+
+            if ((f.state === "PUNCH" || f.state === "KICK") && !f.hasHitThisAttack) {
+              const reach = f.state === "PUNCH" ? 68 : 80;
+              const hitWindow = f.stateTimer >= 5 && f.stateTimer <= 11;
+              if (hitWindow) {
+                const dx = (opp.x - f.x) * f.facing;
+                const dy = Math.abs(opp.y - f.y);
+                if (dx > -10 && dx <= reach && dy < 56) {
+                  f.hasHitThisAttack = true;
+                  const dmg = f.state === "PUNCH" ? f.cfg.punchDmg : f.cfg.kickDmg;
+                  applyDamage(f, opp, dmg, f.state === "KICK" ? 6 : 4, f.state === "KICK");
+                }
+              }
+            }
+
+            if (f.stateTimer === 0) {
+              f.state = f.y < GROUND_Y ? "JUMP" : "IDLE";
+              f.vx = 0;
+            }
+          } else if (gameState.announceTimer <= 35) {
+            if (ctrl.special && f.superMeter >= 100 && f.y >= GROUND_Y) {
+              triggerSpecialMove(f);
+            } else if (ctrl.punch) {
+              f.state = "PUNCH";
+              f.stateTimer = 15;
+              f.hasHitThisAttack = false;
+              if (f.y >= GROUND_Y) f.vx = 0;
+              SoundEngine.playPunch();
+            } else if (ctrl.kick) {
+              f.state = "KICK";
+              f.stateTimer = 18;
+              f.hasHitThisAttack = false;
+              if (f.y >= GROUND_Y) f.vx = 0;
+              SoundEngine.playKick();
+            } else if (ctrl.up && f.y >= GROUND_Y) {
+              f.state = "JUMP";
+              f.vy = f.cfg.jump;
+              f.vx = ctrl.left ? -f.cfg.speed * 1.1 : ctrl.right ? f.cfg.speed * 1.1 : 0;
+            } else if (ctrl.down && f.y >= GROUND_Y) {
+              f.state = "CROUCH";
+              f.vx = 0;
+            } else if (f.y >= GROUND_Y) {
+              if (ctrl.left) {
+                f.state = "WALK";
+                f.vx = -f.cfg.speed;
+              } else if (ctrl.right) {
+                f.state = "WALK";
+                f.vx = f.cfg.speed;
+              } else {
+                f.state = "IDLE";
+                f.vx = 0;
+              }
+            }
+          }
+
+          f.x += f.vx;
+          f.y += f.vy;
+
+          if (f.y < GROUND_Y) {
+            f.vy += 0.65;
+          } else {
+            f.y = GROUND_Y;
+            f.vy = 0;
+            if (f.state === "JUMP") {
+              f.state = "IDLE";
+              f.vx = 0;
+            }
+          }
+
+          f.x = Math.max(46, Math.min(W - 46, f.x));
+        });
+
+        if (Math.abs(p1.x - p2.x) < 42 && Math.abs(p1.y - p2.y) < 40 && p1.state !== "SPECIAL" && p2.state !== "SPECIAL") {
+          const push = (42 - Math.abs(p1.x - p2.x)) * 0.5;
+          if (p1.x <= p2.x) {
+            p1.x = Math.max(46, p1.x - push);
+            p2.x = Math.min(W - 46, p2.x + push);
+          } else {
+            p1.x = Math.min(W - 46, p1.x + push);
+            p2.x = Math.max(46, p2.x - push);
+          }
+        }
+
+        for (let i = projectiles.length - 1; i >= 0; i--) {
+          const pr = projectiles[i];
+          pr.x += pr.vx;
+          pr.spin = (pr.spin || 0) + 0.35;
+
+          const target = pr.owner.slot === 1 ? p2 : p1;
+          const hitDist = pr.r + 22;
+          if (Math.abs(pr.x - target.x) < hitDist && Math.abs(pr.y - (target.y - 46)) < 44) {
+            applyDamage(pr.owner, target, pr.dmg, 8.5, true);
+            spawnParticles(pr.x, pr.y, pr.owner.cfg.accent, 16, 6);
+            projectiles.splice(i, 1);
+            continue;
+          }
+
+          if (pr.x < -40 || pr.x > W + 40) {
+            projectiles.splice(i, 1);
+          }
+        }
+
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const pt = particles[i];
+          pt.x += pt.vx;
+          pt.y += pt.vy;
+          pt.vy += 0.22;
+          pt.life--;
+          if (pt.life <= 0) particles.splice(i, 1);
+        }
+
+        for (let i = shoutBubbles.length - 1; i >= 0; i--) {
+          shoutBubbles[i].life--;
+          if (shoutBubbles[i].life <= 0) shoutBubbles.splice(i, 1);
+        }
+      }
+
+      // =========================================================================
+      // 7. SPRITE LOTTATORI E PROIETTILI
+      // =========================================================================
+      function drawFighterSprite(f) {
+        ctx.save();
+        ctx.translate(Math.round(f.x), Math.round(f.y));
+
+        ctx.fillStyle = "rgba(0, 0, 0, 0.42)";
+        ctx.beginPath();
+        ctx.ellipse(0, 2, f.cfg.bodyType === "sumo" ? 30 : 22, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.scale(f.facing, 1);
+
+        if (f.id === "VATTE" && f.state === "SPECIAL" && f.specialPhase === 1) {
+          ctx.save();
+          ctx.translate(0, -14);
+          ctx.rotate(-Math.PI / 2);
+          drawCharacterBody(f, 0, true);
+          ctx.restore();
+
+          ctx.scale(f.facing, 1);
+          ctx.fillStyle = "#ffffff";
+          ctx.font = "bold 12px Courier New";
+          ctx.textAlign = "center";
+          const bobZ = Math.sin(gameState.frameCount * 0.25) * 3;
+          ctx.fillText("Zzz...", 0, -34 + bobZ);
+          ctx.restore();
+          return;
+        }
+
+        if (f.id === "VATTE" && f.state === "SPECIAL" && f.specialPhase === 2) {
+          ctx.save();
+          ctx.translate(0, -32);
+          ctx.rotate(Math.PI / 2);
+          drawCharacterBody(f, 0, false);
+          ctx.restore();
+
+          ctx.fillStyle = "rgba(255, 112, 166, 0.55)";
+          ctx.beginPath();
+          ctx.moveTo(-25, -48);
+          ctx.lineTo(-75, -32);
+          ctx.lineTo(-25, -16);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+          return;
+        }
+
+        if (f.state === "KO" && f.y >= GROUND_Y) {
+          ctx.save();
+          ctx.translate(0, -12);
+          ctx.rotate(-Math.PI / 2);
+          drawCharacterBody(f, 0, true);
+          ctx.restore();
+          ctx.restore();
+          return;
+        }
+
+        const bob = f.state === "IDLE" ? Math.sin(f.animTick * 0.16) * 2 : 0;
+        const crouchOffset = f.state === "CROUCH" || f.state === "BLOCK" ? 14 : 0;
+
+        drawCharacterBody(f, bob + crouchOffset, false);
+
+        if (f.id === "KIANU" && f.state === "SPECIAL") {
+          ctx.strokeStyle = gameState.frameCount % 2 === 0 ? "#4ce8ff" : "#ffff59";
+          ctx.lineWidth = 2;
+          for (let b = 0; b < 5; b++) {
+            const bx = -22 + Math.random() * 44;
+            const by = -86 + Math.random() * 76;
+            ctx.beginPath();
+            ctx.moveTo(bx, by);
+            ctx.lineTo(bx + (Math.random() - 0.5) * 18, by + (Math.random() - 0.5) * 18);
+            ctx.stroke();
+          }
+        }
+
+        ctx.restore();
+      }
+
+      function drawCharacterBody(f, yOff, eyesClosed) {
+        const isSumo = f.cfg.bodyType === "sumo";
+        const isMusc = f.cfg.bodyType === "muscular";
+        const isSmurfMode = f.id === "KIANU" && f.state === "SPECIAL";
+
+        const skin = isSmurfMode ? "#2196f3" : "#e8a87c";
+        const skinDark = isSmurfMode ? "#1565c0" : "#c98359";
+        const walkSwing = f.state === "WALK" ? Math.sin(f.animTick * 0.32) * 7 : 0;
+
+        if (f.state === "KICK") {
+          pxRect(-10, -34 + yOff, 10, 30 - yOff, isSumo ? skin : "#1d293d");
+          pxRect(-12, -6, 14, 6, isSumo ? skinDark : "#111111");
+          pxRect(4, -46 + yOff, 36, 11, isSumo ? skin : "#263652");
+          pxRect(36, -48 + yOff, 10, 13, isSumo ? skinDark : "#ffd541");
+        } else if (isSumo) {
+          pxRect(-18 + walkSwing, -32 + yOff, 13, 28 - yOff, skin);
+          pxRect(5 - walkSwing, -32 + yOff, 13, 28 - yOff, skin);
+          pxRect(-20 + walkSwing, -5, 16, 5, skinDark);
+          pxRect(4 - walkSwing, -5, 16, 5, skinDark);
+          pxRect(-21, -42 + yOff, 42, 14, "#1e3a6e");
+          pxRect(-6, -42 + yOff, 12, 18, "#294d8f");
+        } else {
+          const pantsColor = f.id === "KIANU" ? "#1b4d27" : "#22293b";
+          pxRect(-13 + walkSwing, -34 + yOff, 10, 30 - yOff, pantsColor);
+          pxRect(3 - walkSwing, -34 + yOff, 10, 30 - yOff, pantsColor);
+          pxRect(-15 + walkSwing, -6, 13, 6, "#11131a");
+          pxRect(2 - walkSwing, -6, 13, 6, "#11131a");
+        }
+
+        const torsoW = isSumo ? 44 : isMusc ? 34 : 28;
+        const torsoX = -torsoW / 2;
+        const torsoY = -68 + yOff;
+        const torsoH = 36;
+
+        if (f.id === "PIGNA") {
+          pxRect(torsoX, torsoY, torsoW, torsoH, "#161821");
+          pxRect(-7, torsoY + 2, 14, torsoH - 2, "#838b99");
+          pxRect(-11, torsoY + 4, 3, 3, "#d8dee9");
+          pxRect(8, torsoY + 4, 3, 3, "#d8dee9");
+        } else if (f.id === "LEGO") {
+          pxRect(torsoX, torsoY, torsoW, torsoH, "#161821");
+          pxRect(torsoX + 2, torsoY, torsoW - 4, torsoH, "#d9ff1a");
+          pxRect(-3, torsoY, 6, torsoH, "#161821");
+          pxRect(torsoX + 2, torsoY + 22, torsoW - 4, 5, "#b8c4cc");
+        } else if (f.id === "VATTE") {
+          pxRect(torsoX, torsoY - 2, torsoW, torsoH + 4, skin);
+          pxRect(-12, torsoY + 6, 24, 18, "#7d5c49");
+        } else if (f.id === "TAGLIA") {
+          pxRect(torsoX, torsoY, torsoW, torsoH, skin);
+          pxRect(-10, torsoY + 6, 20, 16, "#8c6954");
+          pxRect(torsoX, torsoY + 12, torsoW, 2, skinDark);
+        } else if (f.id === "KIANU") {
+          pxRect(torsoX, torsoY, torsoW, torsoH, isSmurfMode ? "#1976d2" : "#f5d419");
+          pxRect(4, torsoY + 7, 7, 8, "#1e3b22");
+        }
+
+        if (f.state === "PUNCH") {
+          pxRect(6, -63 + yOff, 34, 9, f.id === "KIANU" ? "#7a828c" : skin);
+          if (f.id === "LEGO") {
+            pxRect(36, -66 + yOff, 12, 13, "#ffcf00");
+          } else if (f.id === "VATTE") {
+            pxRect(37, -64 + yOff, 9, 10, skin);
+            pxRect(46, -64 + yOff, 6, 3, "#e86da0");
+            pxRect(46, -60 + yOff, 6, 3, "#e86da0");
+          } else {
+            pxRect(36, -65 + yOff, 10, 11, skinDark);
+          }
+        } else if (f.state === "SPECIAL" && (f.id === "TAGLIA" || f.id === "PIGNA" || f.id === "KIANU")) {
+          pxRect(8, -62 + yOff, 24, 8, skin);
+          pxRect(8, -52 + yOff, 24, 8, skin);
+          pxRect(30, -63 + yOff, 8, 18, f.cfg.accent);
+        } else {
+          pxRect(-torsoW / 2 - 5, -64 + yOff, 8, 22, f.id === "KIANU" ? "#7a828c" : skin);
+          pxRect(torsoW / 2 - 2, -62 + yOff, 14, 9, f.id === "KIANU" ? "#7a828c" : skin);
+          if (f.id === "LEGO" && !(f.state === "SPECIAL" && f.stateTimer > 12)) {
+            pxRect(torsoW / 2 + 8, -65 + yOff, 10, 11, "#ffcf00");
+          } else if (f.id === "VATTE") {
+            pxRect(torsoW / 2 + 12, -63 + yOff, 5, 3, "#e86da0");
+            pxRect(torsoW / 2 + 12, -59 + yOff, 5, 3, "#e86da0");
+          }
+        }
+
+        const headY = -92 + yOff;
+        pxRect(-11, headY, 22, 24, skin);
+
+        if (f.id === "PIGNA") {
+          pxRect(-13, headY - 6, 26, 12, "#1f5934");
+          pxRect(-14, headY + 2, 28, 5, "#143d23");
+          const eyeScale = (f.state === "SPECIAL" && f.stateTimer > 16) ? 3 : 7;
+          pxRect(2, headY + 7, eyeScale, eyeScale, "#ffffff");
+          pxRect(4, headY + 9, 3, 3, "#000000");
+          pxRect(-6, headY + 15, 16, 4, "#262220");
+          pxRect(-4, headY + 19, 12, 4, "#403c3a");
+        } else if (f.id === "LEGO") {
+          pxRect(-11, headY - 4, 22, 6, "#593722");
+          if (!eyesClosed) {
+            pxRect(2, headY + 6, 4, 3, "#ffffff");
+            pxRect(4, headY + 6, 2, 3, "#000000");
+          }
+          pxRect(-8, headY + 13, 18, 9, "#786e68");
+          pxRect(-2, headY + 15, 10, 2, "#ffffff");
+        } else if (f.id === "VATTE") {
+          pxRect(-7, headY - 2, 14, 3, "#4a433f");
+          pxRect(-4, headY + 5, 16, 6, "#5c3324");
+          pxRect(-2, headY + 6, 12, 4, "#192230");
+          pxRect(-9, headY + 13, 20, 11, "#383432");
+          pxRect(-6, headY + 15, 15, 8, "#8c8784");
+        } else if (f.id === "TAGLIA") {
+          pxRect(-11, headY - 5, 22, 7, "#593b27");
+          pxRect(-6, headY - 7, 14, 3, "#734e35");
+          if (!eyesClosed) {
+            pxRect(2, headY + 6, 5, 3, "#ffffff");
+            pxRect(4, headY + 6, 2, 3, "#000000");
+          }
+          pxRect(-8, headY + 13, 18, 9, "#6e5a4f");
+        } else if (f.id === "KIANU") {
+          pxRect(-13, headY - 5, 26, 29, isSmurfMode ? "#ffffff" : "#74d649");
+          pxRect(-6, headY + 3, 16, 17, skin);
+          if (!eyesClosed) {
+            pxRect(2, headY + 6, 4, 3, "#ffffff");
+            pxRect(4, headY + 6, 2, 3, "#000000");
+          }
+          pxRect(-4, headY + 14, 12, 5, "#5c5048");
+        }
+      }
+
+      function drawProjectiles() {
+        projectiles.forEach((pr) => {
+          ctx.save();
+          ctx.translate(Math.round(pr.x), Math.round(pr.y));
+
+          if (pr.type === "EYE") {
+            ctx.rotate(pr.spin);
+            ctx.fillStyle = "#e63946";
+            ctx.fillRect(-22, -3, 12, 6);
+            ctx.fillStyle = "#ffffff";
+            ctx.beginPath();
+            ctx.arc(0, 0, pr.r, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = "#d90429";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.fillStyle = "#4a2511";
+            ctx.beginPath();
+            ctx.arc(5, 0, 7, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "#000000";
+            ctx.beginPath();
+            ctx.arc(6, 0, 3.5, 0, Math.PI * 2);
+            ctx.fill();
+          } else if (pr.type === "LEGO_HAND") {
+            const dir = pr.vx >= 0 ? 1 : -1;
+            ctx.scale(dir, 1);
+            ctx.fillStyle = gameState.frameCount % 2 === 0 ? "#ff5900" : "#ffd541";
+            ctx.beginPath();
+            ctx.moveTo(-10, -6);
+            ctx.lineTo(-28, 0);
+            ctx.lineTo(-10, 6);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.fillStyle = "#ffcf00";
+            ctx.fillRect(-10, -10, 20, 20);
+            ctx.fillStyle = "#000000";
+            ctx.fillRect(0, -5, 11, 10);
+            ctx.strokeStyle = "#b38600";
+            ctx.lineWidth = 2;
+            ctx.strokeRect(-10, -10, 20, 20);
+          } else if (pr.type === "HADOUKEN") {
+            const pulse = Math.sin(gameState.frameCount * 0.5) * 3;
+            ctx.fillStyle = "rgba(0, 174, 255, 0.45)";
+            ctx.beginPath();
+            ctx.arc(0, 0, pr.r + 6 + pulse, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = "#38b6ff";
+            ctx.beginPath();
+            ctx.arc(0, 0, pr.r, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = "#ffffff";
+            ctx.beginPath();
+            ctx.arc(4, 0, pr.r * 0.55, 0, Math.PI * 2);
+            ctx.fill();
+          } else if (pr.type === "SMURF_BOLT") {
+            ctx.strokeStyle = "#4ce8ff";
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.moveTo(-24, 0);
+            ctx.lineTo(-8, -12);
+            ctx.lineTo(4, 10);
+            ctx.lineTo(22, -4);
+            ctx.stroke();
+
+            ctx.strokeStyle = "#ffffff";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+          }
+
+          ctx.restore();
+        });
+      }
+
+      // =========================================================================
+      // 8. SELEZIONE LOTTATORI, VS SCREEN E HUD DI GARA
+      // =========================================================================
+      function drawSelectScreen() {
+        gameState.uiHitboxes = [];
+
+        const bg = ctx.createLinearGradient(0, 0, 0, H);
+        bg.addColorStop(0, "#0b1333");
+        bg.addColorStop(0.5, "#152359");
+        bg.addColorStop(1, "#090e26");
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, W, H);
+
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#990000";
+        ctx.font = "900 20px Courier New";
+        ctx.fillText("SELEZIONA IL TUO LOTTATORE", W / 2 + 2, 28);
+        ctx.fillStyle = "#ffd541";
+        ctx.fillText("SELEZIONA IL TUO LOTTATORE", W / 2, 26);
+
+        const modeBox = { x: W / 2 - 102, y: 34, w: 204, h: 22 };
+        pxRect(modeBox.x, modeBox.y, modeBox.w, modeBox.h, "#1d2952");
+        ctx.strokeStyle = "#4ce8ff";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(modeBox.x, modeBox.y, modeBox.w, modeBox.h);
+        ctx.fillStyle = "#4ce8ff";
+        ctx.font = "bold 11px Courier New";
+        const modeLabel = gameState.mode === "1P"
+          ? "MODO: 1P VS CPU (CAMBIA)"
+          : `MODO: 2P (SCEGLIE P${gameState.selectTurn})`;
+        ctx.fillText(modeLabel, W / 2, 49);
+        gameState.uiHitboxes.push({
+          ...modeBox,
+          onClick: () => toggleMode()
+        });
+
+        const cardW = 108;
+        const cardH = 122;
+        const gap = 12;
+        const totalW = ROSTER_IDS.length * cardW + (ROSTER_IDS.length - 1) * gap;
+        const startX = (W - totalW) / 2;
+        const startY = 66;
+
+        ROSTER_IDS.forEach((id, idx) => {
+          const cx = startX + idx * (cardW + gap);
+          const cy = startY;
+          const isP1 = gameState.p1Id === id;
+          const isP2 = gameState.p2Id === id;
+
+          pxRect(cx, cy, cardW, cardH, "#131b3d");
+          drawPortrait(id, cx + 10, cy + 8, 88, false);
+
+          ctx.fillStyle = "#ffffff";
+          ctx.font = "bold 12px Courier New";
+          ctx.textAlign = "center";
+          ctx.fillText(FIGHTERS[id].name, cx + cardW / 2, cy + 112);
+
+          const blink = Math.floor(gameState.frameCount / 10) % 2 === 0;
+          if (isP1) {
+            ctx.strokeStyle = blink ? "#ffd541" : "#ff5964";
+            ctx.lineWidth = 3;
+            ctx.strokeRect(cx - 1, cy - 1, cardW + 2, cardH + 2);
+            pxRect(cx + 4, cy + 4, 24, 14, "#e63946");
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "bold 10px Courier New";
+            ctx.fillText("1P", cx + 16, cy + 14);
+          }
+          if (isP2) {
+            ctx.strokeStyle = isP1 ? "#4ce8ff" : (blink ? "#4ce8ff" : "#59ff8f");
+            ctx.lineWidth = 3;
+            ctx.strokeRect(cx + 2, cy + 2, cardW - 4, cardH - 4);
+            pxRect(cx + cardW - 28, cy + 4, 24, 14, "#0077b6");
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "bold 10px Courier New";
+            ctx.fillText(gameState.mode === "1P" ? "CPU" : "2P", cx + cardW - 16, cy + 14);
+          }
+
+          gameState.uiHitboxes.push({
+            x: cx,
+            y: cy,
+            w: cardW,
+            h: cardH,
+            onClick: () => selectFighterByIndex(idx)
+          });
+        });
+
+        const panelY = 200;
+        const panelH = 106;
+        drawFighterPreviewBox(gameState.p1Id, 20, panelY, 225, panelH, "PLAYER 1");
+        drawFighterPreviewBox(
+          gameState.p2Id,
+          W - 245,
+          panelY,
+          225,
+          panelH,
+          gameState.mode === "1P" ? "CPU RIVAL" : "PLAYER 2"
+        );
+
+        const btnW = 134;
+        const btnH = 66;
+        const btnX = W / 2 - btnW / 2;
+        const btnY = panelY + 20;
+        const pulseBtn = Math.floor(gameState.frameCount / 14) % 2 === 0;
+
+        pxRect(btnX, btnY, btnW, btnH, pulseBtn ? "#d92b3a" : "#b81d2a");
+        ctx.strokeStyle = "#ffd541";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(btnX, btnY, btnW, btnH);
+
+        ctx.fillStyle = "#ffffff";
+        ctx.textAlign = "center";
+        ctx.font = "900 13px Courier New";
+        if (gameState.mode === "2P" && gameState.selectTurn === 1) {
+          ctx.fillText("CONFERMA", W / 2, btnY + 28);
+          ctx.fillStyle = "#ffd541";
+          ctx.fillText("PLAYER 1", W / 2, btnY + 46);
+        } else {
+          ctx.fillText("INIZIA", W / 2, btnY + 28);
+          ctx.fillStyle = "#ffd541";
+          ctx.fillText("INCONTRO!", W / 2, btnY + 46);
+        }
+
+        gameState.uiHitboxes.push({
+          x: btnX,
+          y: btnY,
+          w: btnW,
+          h: btnH,
+          onClick: () => confirmSelectionAction()
+        });
+
+        ctx.fillStyle = "#9fb3ff";
+        ctx.font = "bold 10px Courier New";
+        ctx.fillText("ARENA: CAMPO DA RUGBY ITALIANO • MOSSA SEGRETA PRONTA AL 100%", W / 2, 336);
+      }
+
+      function drawFighterPreviewBox(id, x, y, w, h, tag) {
+        const f = FIGHTERS[id];
+        pxRect(x, y, w, h, "rgba(12, 18, 42, 0.92)");
+        ctx.strokeStyle = f.accent;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x, y, w, h);
+
+        drawPortrait(id, x + 8, y + 18, 66, tag !== "PLAYER 1");
+
+        ctx.textAlign = "left";
+        ctx.fillStyle = f.accent;
+        ctx.font = "bold 10px Courier New";
+        ctx.fillText(`${tag}: ${f.name}`, x + 8, y + 13);
+
+        const sx = x + 82;
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 9px Courier New";
+        ctx.fillText("FORZA", sx, y + 28);
+        drawStatBar(sx + 48, y + 21, 84, 7, f.stats.forza, "#ff5964");
+
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText("VELOC.", sx, y + 42);
+        drawStatBar(sx + 48, y + 35, 84, 7, f.stats.velocita, "#4ce8ff");
+
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText("FOLLIA", sx, y + 56);
+        drawStatBar(sx + 48, y + 49, 84, 7, f.stats.follia, "#ffd541");
+
+        ctx.fillStyle = "#ffd541";
+        ctx.font = "bold 9px Courier New";
+        ctx.fillText(`SPEC: ${f.specialName}`, x + 8, y + 96);
+      }
+
+      function drawStatBar(x, y, w, h, val, color) {
+        pxRect(x, y, w, h, "#252f59");
+        pxRect(x, y, Math.round((w * val) / 100), h, color);
+      }
+
+      function drawVsScreen() {
+        gameState.uiHitboxes = [];
+        gameState.vsTimer--;
+
+        const bg = ctx.createLinearGradient(0, 0, W, H);
+        bg.addColorStop(0, "#1d1038");
+        bg.addColorStop(0.5, "#3b154a");
+        bg.addColorStop(1, "#121a42");
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, W, H);
+
+        ctx.strokeStyle = "rgba(255, 213, 65, 0.25)";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(W / 2 - 30, 0);
+        ctx.lineTo(W / 2 + 30, H);
+        ctx.stroke();
+
+        const slide = Math.min(1, (110 - gameState.vsTimer) / 18);
+        const p1X = -150 + slide * 215;
+        const p2X = W + 10 - slide * 215;
+
+        drawPortrait(gameState.p1Id, p1X, 85, 140, false);
+        drawPortrait(gameState.p2Id, p2X, 85, 140, true);
+
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#ffd541";
+        ctx.font = "900 18px Courier New";
+        ctx.fillText(FIGHTERS[gameState.p1Id].name, p1X + 70, 252);
+        ctx.fillText(FIGHTERS[gameState.p2Id].name, p2X + 70, 252);
+
+        ctx.fillStyle = "#990000";
+        ctx.font = "900 54px Courier New";
+        ctx.fillText("VS", W / 2 + 4, 174);
+        ctx.fillStyle = "#ffd541";
+        ctx.fillText("VS", W / 2, 170);
+
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 12px Courier New";
+        ctx.fillText("ARENA: CAMPO DA RUGBY ITALIANO", W / 2, 315);
+
+        if (gameState.vsTimer <= 0) {
+          startFight();
+        }
+      }
+
+      function drawHud() {
+        if (!fighters || fighters.length < 2) return;
+        const [p1, p2] = fighters;
+
+        drawPortrait(p1.id, 14, 10, 42, false);
+        drawPortrait(p2.id, W - 56, 10, 42, true);
+
+        const barW = 222;
+        const barH = 16;
+        const p1BarX = 62;
+        const p2BarX = W - 62 - barW;
+        const barY = 16;
+
+        pxRect(p1BarX - 2, barY - 2, barW + 4, barH + 4, "#ffffff");
+        pxRect(p1BarX, barY, barW, barH, "#b81d2a");
+        const p1DispW = Math.round((barW * p1.displayHp) / 100);
+        pxRect(p1BarX + (barW - p1DispW), barY, p1DispW, barH, "#ff7b00");
+        const p1HpW = Math.round((barW * p1.hp) / 100);
+        pxRect(p1BarX + (barW - p1HpW), barY, p1HpW, barH, p1.hp < 25 ? "#ff3b3b" : "#ffd541");
+
+        pxRect(p2BarX - 2, barY - 2, barW + 4, barH + 4, "#ffffff");
+        pxRect(p2BarX, barY, barW, barH, "#b81d2a");
+        const p2DispW = Math.round((barW * p2.displayHp) / 100);
+        pxRect(p2BarX, barY, p2DispW, barH, "#ff7b00");
+        const p2HpW = Math.round((barW * p2.hp) / 100);
+        pxRect(p2BarX, barY, p2HpW, barH, p2.hp < 25 ? "#ff3b3b" : "#ffd541");
+
+        pxRect(W / 2 - 18, 12, 36, 22, "#d92b3a");
+        ctx.strokeStyle = "#ffd541";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(W / 2 - 18, 12, 36, 22);
+        ctx.fillStyle = "#ffffff";
+        ctx.textAlign = "center";
+        ctx.font = "900 13px Courier New";
+        ctx.fillText("KO", W / 2, 27);
+
+        ctx.fillStyle = "#ffd541";
+        ctx.font = "900 22px Courier New";
+        ctx.fillText(String(gameState.roundTimer).padStart(2, "0"), W / 2, 54);
+
+        ctx.textAlign = "left";
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 12px Courier New";
+        ctx.fillText(p1.cfg.name, p1BarX, 46);
+
+        ctx.textAlign = "right";
+        ctx.fillText(p2.cfg.name, p2BarX + barW, 46);
+
+        const spW = 140;
+        const spH = 7;
+        pxRect(p1BarX, 50, spW, spH, "#1c2440");
+        const p1Ready = p1.superMeter >= 100;
+        pxRect(
+          p1BarX,
+          50,
+          Math.round((spW * p1.superMeter) / 100),
+          spH,
+          p1Ready && gameState.frameCount % 6 < 3 ? "#ffffff" : "#4ce8ff"
+        );
+        if (p1Ready) {
+          ctx.textAlign = "left";
+          ctx.fillStyle = "#ffd541";
+          ctx.font = "bold 9px Courier New";
+          ctx.fillText("SPECIALE PRONTA! [H]", p1BarX, 67);
+        }
+
+        pxRect(p2BarX + barW - spW, 50, spW, spH, "#1c2440");
+        const p2Ready = p2.superMeter >= 100;
+        const p2Fill = Math.round((spW * p2.superMeter) / 100);
+        pxRect(
+          p2BarX + barW - p2Fill,
+          50,
+          p2Fill,
+          spH,
+          p2Ready && gameState.frameCount % 6 < 3 ? "#ffffff" : "#4ce8ff"
+        );
+        if (p2Ready) {
+          ctx.textAlign = "right";
+          ctx.fillStyle = "#ffd541";
+          ctx.font = "bold 9px Courier New";
+          ctx.fillText(gameState.mode === "1P" ? "SPECIALE PRONTA!" : "SPECIALE PRONTA! [O]", p2BarX + barW, 67);
+        }
+
+        shoutBubbles.forEach((sb) => {
+          const bx = Math.max(105, Math.min(W - 105, sb.fighter.x));
+          const by = Math.max(84, sb.fighter.y - 114);
+          ctx.font = "900 12px Courier New";
+          const tw = ctx.measureText(sb.text).width + 18;
+          pxRect(bx - tw / 2, by - 14, tw, 22, "#ffffff");
+          ctx.strokeStyle = "#000000";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(bx - tw / 2, by - 14, tw, 22);
+          ctx.fillStyle = "#b8001f";
+          ctx.textAlign = "center";
+          ctx.fillText(sb.text, bx, by + 1);
+        });
+
+        if (gameState.announceTimer > 0 && gameState.announceText) {
+          ctx.textAlign = "center";
+          ctx.font = "900 30px Courier New";
+          ctx.fillStyle = "#8a0000";
+          ctx.fillText(gameState.announceText, W / 2 + 3, H / 2 - 12);
+          ctx.fillStyle = "#ffd541";
+          ctx.fillText(gameState.announceText, W / 2, H / 2 - 15);
+        }
+
+        if (gameState.screen === "KO" && gameState.winner && gameState.announceTimer < 85) {
+          gameState.uiHitboxes = [];
+          const wCfg = gameState.winner.cfg;
+
+          pxRect(90, 96, W - 180, 174, "rgba(10, 14, 34, 0.94)");
+          ctx.strokeStyle = "#ffd541";
+          ctx.lineWidth = 3;
+          ctx.strokeRect(90, 96, W - 180, 174);
+
+          drawPortrait(wCfg.id, 108, 114, 86, false);
+
+          ctx.textAlign = "left";
+          ctx.fillStyle = "#ffd541";
+          ctx.font = "900 18px Courier New";
+          ctx.fillText(`${wCfg.name} VINCE!`, 208, 134);
+
+          ctx.fillStyle = "#ffffff";
+          ctx.font = "bold 11px Courier New";
+          const words = wCfg.quote.split(" ");
+          let line1 = "";
+          let line2 = "";
+          words.forEach((word) => {
+            if ((line1 + word).length <= 30) line1 += word + " ";
+            else line2 += word + " ";
+          });
+          ctx.fillText(line1.trim(), 208, 158);
+          if (line2) ctx.fillText(line2.trim(), 208, 174);
+
+          const rBtn = { x: 208, y: 200, w: 136, h: 42 };
+          pxRect(rBtn.x, rBtn.y, rBtn.w, rBtn.h, "#1f7a3e");
+          ctx.strokeStyle = "#ffd541";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(rBtn.x, rBtn.y, rBtn.w, rBtn.h);
+          ctx.fillStyle = "#ffffff";
+          ctx.textAlign = "center";
+          ctx.font = "900 12px Courier New";
+          ctx.fillText("RIVINCITA", rBtn.x + rBtn.w / 2, rBtn.y + 25);
+          gameState.uiHitboxes.push({
+            ...rBtn,
+            onClick: () => startVsScreen()
+          });
+
+          const cBtn = { x: 356, y: 200, w: 174, h: 42 };
+          pxRect(cBtn.x, cBtn.y, cBtn.w, cBtn.h, "#293b7a");
+          ctx.strokeStyle = "#4ce8ff";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(cBtn.x, cBtn.y, cBtn.w, cBtn.h);
+          ctx.fillStyle = "#ffffff";
+          ctx.font = "900 11px Courier New";
+          ctx.fillText("CAMBIA LOTTATORE", cBtn.x + cBtn.w / 2, cBtn.y + 25);
+          gameState.uiHitboxes.push({
+            ...cBtn,
+            onClick: () => goToSelectScreen()
+          });
+        }
+      }
+
+      // =========================================================================
+      // 9. LOOP PRINCIPALE E AVVIO GARANTITO
+      // =========================================================================
+      function gameLoop() {
+        try {
+          gameState.frameCount++;
+          ctx.fillStyle = "#000000";
+          ctx.fillRect(0, 0, W, H);
+
+          if (gameState.screen === "SELECT") {
+            drawSelectScreen();
+          } else if (gameState.screen === "VS") {
+            drawVsScreen();
+          } else {
+            updateFight();
+
+            ctx.save();
+            if (gameState.shake > 0) {
+              const sx = (Math.random() - 0.5) * gameState.shake * 1.5;
+              const sy = (Math.random() - 0.5) * gameState.shake * 1.5;
+              ctx.translate(sx, sy);
+            }
+
+            const midX = fighters.length >= 2 ? (fighters[0].x + fighters[1].x) / 2 - W / 2 : 0;
+            drawRugbyStadium(midX);
+
+            const ordered = [...fighters].sort((a, b) =>
+              ["PUNCH", "KICK", "SPECIAL"].includes(a.state) ? 1 : -1
+            );
+            ordered.forEach((f) => drawFighterSprite(f));
+
+            drawProjectiles();
+
+            particles.forEach((pt) => {
+              pxRect(pt.x - pt.size / 2, pt.y - pt.size / 2, pt.size, pt.size, pt.color);
+            });
+
+            ctx.restore();
+            drawHud();
+          }
+        } catch (err) {}
+
+        requestAnimationFrame(gameLoop);
+      }
+
+      let loopStarted = false;
+      function startEngine() {
+        if (loopStarted) return;
+        loopStarted = true;
+        requestAnimationFrame(gameLoop);
+      }
+
+      if (document.readyState === "complete" || document.readyState === "interactive") {
+        startEngine();
+      } else {
+        document.addEventListener("DOMContentLoaded", startEngine);
+      }
+      window.addEventListener("load", startEngine);
+      setTimeout(startEngine, 100);
+    })();
+  </script>
+</body>
+</html>
